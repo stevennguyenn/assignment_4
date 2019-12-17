@@ -174,13 +174,33 @@ class CodeGenVisitor(BaseVisitor, Utils):
         self.emit.printout(in_[0])
         self.emit.printout(self.emit.emitINVOKESTATIC(cname + "/" + ast.method.name, ctype, frame))
 
-    def visitIntLiteral(self, ast, o):
-        #ast: IntLiteral
-        #o: Any
+    # def visitIntLiteral(self, ast, o):
+    #     #ast: IntLiteral
+    #     #o: Any
 
+    #     ctxt = o
+    #     frame = ctxt.frame
+    #     return self.emit.emitPUSHICONST(ast.value, frame), BoolType()
+    def visitIntLiteral(self, ast, o):
         ctxt = o
         frame = ctxt.frame
         return self.emit.emitPUSHICONST(ast.value, frame), IntType()
+
+    def visitFloatLiteral(self, ast, o):
+        ctxt = o 
+        frame = ctxt.frame
+        return self.emit.emitPUSHFCONST(str(ast.value), frame), FloatType()
+
+    def visitBooleanLiteral(self, ast, o):
+        ctxt = o
+        frame = ctxt.frame
+        return self.emit.emitPUSHICONST(str(ast.value).lower(), frame), BoolType()
+    
+    def visitStringLiteral(self, ast, o):
+        ctxt = o
+        frame = ctxt.frame
+        mstr = '"' + ast.value + '"'
+        return self.emit.emitPUSHCONST(mstr, StringType(), frame), StringType()
 
     def visitId(self, ast, o):
         ctxt = o
@@ -196,7 +216,7 @@ class CodeGenVisitor(BaseVisitor, Utils):
                 return self.emit.emitGETSTATIC('MCClass/'+res.name, res.mtype, frame), res.mtype
             else:
                 return self.emit.emitREADVAR(res.name, res.mtype, res.value, frame), res.mtype
-        
+
     def visitBinaryOp(self, ast, o):
         ctxt = o
         frame = ctxt.frame
@@ -215,10 +235,11 @@ class CodeGenVisitor(BaseVisitor, Utils):
                 valL = valL + self.emit.emitI2F(frame)
             if type(typR) is IntType:
                 valR = valR + self.emit.emitI2F(frame)
-        elif ast.op in ["<","<=",">",">=","<>","==","&&","||"]:
+        elif ast.op in ["<","<=",">",">=","!=","<>","==","&&","||"]:
             mtype = BoolType()
         else: 
             mtype = IntType()
+        # print(ast.op)
         if ast.op == "+" or ast.op == "-":
             op = self.emit.emitADDOP(ast.op, mtype, frame)
         elif ast.op =="*" or ast.op == "/":
@@ -227,7 +248,7 @@ class CodeGenVisitor(BaseVisitor, Utils):
             op = self.emit.emitMOD(frame)
         elif ast.op == "&&":
             op = self.emit.emitANDOP(frame)
-        elif ast.op.lower() == "||":
+        elif ast.op == "||":
             op = self.emit.emitOROP(frame)
         else:
             op = self.emit.emitREOP(ast.op, mtype, frame)
